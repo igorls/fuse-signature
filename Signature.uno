@@ -11,6 +11,34 @@ using OpenGL;
 
 public class Signature : Fuse.Controls.Panel
 {
+
+    public Signature()
+    {
+        ScriptClass _instSC = ScriptClass.Get(typeof(Signature));
+        bool _valid = true;
+
+        foreach(ScriptMember member in _instSC.Members)
+        {
+            if(member.Name == "clear")
+            {
+                _valid = false;
+            }
+        }
+
+        if(_valid)
+        {
+           ScriptClass.Register(typeof(Signature),
+            new ScriptMethod<Signature>("clear", ClearDrawing, ExecutionThread.MainThread));
+        }
+    }
+
+    public void ClearDrawing(Context c, Signature s, object[] args)
+    {
+        _lines = new List<float2>();
+        _verts = new float2[]{float2(-0.5f, -0.5f),float2( 0.5f, -0.5f)};
+        InvalidateVisual();
+    }
+
     protected override void OnRooted()
     {
         base.OnRooted();

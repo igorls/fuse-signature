@@ -1,14 +1,44 @@
 <App>
 	<JavaScript>
-		exports.save = function () {
-			sp.save("test.png");
-		}
+	var SignatureModule = require("SignatureModule");
+	var Observable = require('FuseJS/Observable');
+
+	var path = Observable("");
+	var saved = Observable(false);
+	
+	exports.clear = function() {
+		sign.clear();
+		saved.value = false;
+		path.value = "";
+	}
+
+	exports.save = function() {
+		sp.save("img-"+((new Date).getTime())+".png");
+		saved.value = true;
+	}
+	
+	exports.getPath = function() {
+		path.value = SignatureModule.GetPath('sp');
+	}
+	
+	exports.path = path;
+	exports.saved = saved;
 	</JavaScript>
-	<Panel Width="100%" Height="100%">
-		<SavePanel Background="#ffff" ux:Name="sp" Alignment="Center" Width="100%" Height="100%">
-					<Signature ux:Name="sign" Alignment="Center" Width="100%" Height="100%" ClipToBounds="true"/>
-					<Image Url="https://img.ogol.io/fusetools.com/ntebc1.png?w=1920&amp;h=460&amp;padding=0.1" />
-		</SavePanel>
-		<Button Text="SAVE!" Clicked="{save}" />
-	</Panel>
+	<ClientPanel>
+		<Grid Dock="Bottom" ColumnCount="3" RowCount="1" Margin="10">
+			<Button Text="CLEAR" Alignment="Center" Clicked="{clear}"/>
+			<Button Text="SAVE" Alignment="Center" Clicked="{save}"/>
+			<WhileTrue Value="{saved}">
+				<Button Text="GET PATH" Alignment="Center" Clicked="{getPath}"/>
+			</WhileTrue>
+		</Grid>
+		<Text Dock="Bottom" Value="{path}" Alignment="Center"  Margin="5" Font="Light" FontSize="12"/>
+		<Panel Dock="Fill" Margin="20"> 
+			<SavePanel Background="#ffff" ux:Name="sp" Alignment="Center" Width="100%" Height="100%">
+				<SolidColor Color="#E4E4E4"/>
+				<Signature ux:Name="sign" Alignment="Center" Width="100%" Height="100%" ClipToBounds="true"/>
+				<Image Url="https://img.ogol.io/fusetools.com/ntebc1.png?w=1920&amp;h=460&amp;padding=0.1" />
+			</SavePanel>
+		</Panel>
+	</ClientPanel>
 </App>

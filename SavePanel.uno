@@ -1,4 +1,5 @@
 using Uno;
+using Uno.UX;
 using Uno.Collections;
 using Uno.Compiler.ExportTargetInterop;
 using Uno.Graphics;
@@ -6,7 +7,7 @@ using Uno.IO;
 using Fuse;
 using Fuse.Input;
 using Fuse.Scripting;
-
+using Fuse.Reactive;
 using OpenGL;
 
 [ForeignInclude(Language.ObjC, "OpenGLES/ES2/glext.h")]
@@ -14,14 +15,26 @@ using OpenGL;
 [Require("Source.Include", "uImage/Bitmap.h")]
 [Require("Source.Include", "uImage/Png.h")]
 [Require("Source.Include", "uBase/Memory.h")]
+[Require("Source.Include", "Uno/Support.h")]
 
 public class SavePanel : Fuse.Controls.Panel
 {
-	static SavePanel()
+	public string imagePath;
+	static readonly SavePanel _instance;
+
+	public SavePanel()
 	{
+		if (_instance != null) return;
+        _instance = this;
+
 		ScriptClass.Register(typeof(SavePanel),
 			new ScriptMethod<SavePanel>("save", Save, ExecutionThread.MainThread));
 	}
+
+	public string GetPath()
+    {
+    	return imagePath;
+    }
 
 	static void Save(Context c, SavePanel s, object [] args) {
 		if (args.Length != 1)
@@ -37,6 +50,8 @@ public class SavePanel : Fuse.Controls.Panel
 	public void Save(string filename) {
 		_savefn = Path.Combine(Directory.GetUserDirectory(UserDirectory.Data), filename);
 		debug_log "Saving to " + _savefn;
+
+		imagePath = _savefn;
 
 		_captureNextFrame = true;
 		InvalidateVisual();
@@ -103,6 +118,28 @@ public class SavePanel : Fuse.Controls.Panel
 
 		base.DrawWithChildren(dc);
 	}
+
+	protected override void OnRooted()
+    {
+		base.OnRooted();
+		if(Name != null)
+		{
+			if(SignatureJS.SavePanels.ContainsKey(Name))
+			{
+				SignatureJS.SavePanels.Remove(Name);
+			}
+			SignatureJS.SavePanels.Add(Name, _instance);
+		}
+    }
+
+    protected override void OnUnrooted()
+    {
+    	if (Name != null)
+    	{
+			SignatureJS.SavePanels.Remove(Name);
+    	}
+    	base.OnUnrooted();
+    }
 
 	extern(!CPlusPlus) public void SavePng(byte[] data, int w, int h, string path) {
 		Fuse.Diagnostics.UserError( "SavePanel.save not working in local preview yet", this );
